@@ -1,0 +1,119 @@
+from flask import Flask, render_template, request
+import langdetect
+import wikipediaapi
+from googletrans import Translator
+import pyttsx3
+
+app = Flask(__name__)
+
+# Function to detect the language of the text
+def detect_language(text):
+    return langdetect.detect(text)
+
+# Function to translate text to a target language
+def translate_text(text, target_lang):
+    translator = Translator()
+    translated_text = translator.translate(text, dest=target_lang)
+    return translated_text.text
+
+# Function to search for information on Wikipedia based on the question
+def search_wikipedia(question):
+    wiki_wiki = wikipediaapi.Wikipedia('en')  # Set the language to English
+    page = wiki_wiki.page(question)
+    if page.exists():
+        return page.summary
+    else:
+        return "Sorry, I couldn't find information related to your question on Wikipedia."
+
+# Function to read out text using text-to-speech
+def read_out(text, lang):
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 150)    # Speed of speech
+    engine.setProperty('voice', lang)  # Language of speech
+    engine.say(text)
+    engine.runAndWait()
+
+@app.route('/')
+def index():
+    return render_template('index.my_html')
+
+
+@app.route('/answer', methods=['POST'])
+def answer():
+    question = request.form['question']
+
+    # Step 1: Detect the language of the question
+    detected_lang = detect_language(question)
+
+    # Step 2: Search Wikipedia for information based on the question
+    response = search_wikipedia(question)
+
+    # Step 3: Translate the response to the detected language (if needed)
+    if detected_lang != 'en':  # Assuming the response is in English
+        response = translate_text(response, detected_lang)
+
+    # Step 4: Read out the response in the detected language
+    read_out(response, detected_lang)
+
+    return render_template('index.html', response=response)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+    # multi_lang_ai.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello, world!'
+
+
+# routes.py
+from my_own_app.py import app
+
+@app.route('/')
+def index():
+    return 'Hello, world!'
+
+
+
+
+# routes.py
+from my_own_app.py import app
+
+@app.route('/')
+def index():
+    return 'Hello, world!'
+
+
+
+
+
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.my_html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+from pathlib import Path
+from openai import OpenAI
+client = OpenAI()
+
+speech_file_path = Path(__file__).parent / "speech.mp3"
+response = client.audio.speech.create(
+  model="tts-1",
+  voice="alloy",
+  input="Today is a wonderful day to build something people love!"
+)
+
+response.stream_to_file(speech_file_path)
